@@ -17,3 +17,9 @@ variable "deployment_id" {
   type        = string
   default     = "manual"
 }
+
+variable "trusted_role_arn" {
+  description = "Single IAM principal ARN allowed to access the bucket; everyone else is denied. Empty = default to jenkins-ci."
+  type        = string
+  default     = ""
+}

@@ -15,6 +15,7 @@ pipeline {
     booleanParam(name: 'AUTO_APPROVE', defaultValue: false, description: 'Skip approval')
     string(name: 'EXTERNAL_ACCOUNT_ID', defaultValue: '000000000000', description: 'Phase 2 only: external AWS account granted secret read')
     string(name: 'TRUSTED_ROLE_ARNS_JSON', defaultValue: '[]', description: 'Phase 3 only: JSON array of role ARNs granted Encrypt/Decrypt, e.g. ["arn:aws:iam::562517367791:role/Foo"]')
+    string(name: 'TRUSTED_S3_ROLE_ARN', defaultValue: '', description: 'Phase 1 only: single IAM principal ARN exempt from the bucket Deny. Empty = jenkins-ci user.')
   }
   stages {
     stage('Checkout') { steps { checkout scm } }
@@ -29,6 +30,8 @@ pipeline {
           // Phase-specific TF_VARs:
           env.TF_VAR_external_account_id = params.EXTERNAL_ACCOUNT_ID.trim()
           env.TF_VAR_trusted_role_arns   = params.TRUSTED_ROLE_ARNS_JSON.trim()
+          env.TF_VAR_trusted_role_arn    = params.TRUSTED_S3_ROLE_ARN.trim()
+    string(name: 'TRUSTED_S3_ROLE_ARN', defaultValue: '', description: 'Phase 1 only: single IAM principal ARN exempt from the bucket Deny. Empty = jenkins-ci user.')
           echo "=== BUILD START (UTC): ${env.APPLY_START_UTC} | build #${env.BUILD_NUMBER} | phase=${params.PHASE} ==="
         }
       }
