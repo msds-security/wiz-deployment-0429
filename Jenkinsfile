@@ -31,7 +31,6 @@ pipeline {
           env.TF_VAR_external_account_id = params.EXTERNAL_ACCOUNT_ID.trim()
           env.TF_VAR_trusted_role_arns   = params.TRUSTED_ROLE_ARNS_JSON.trim()
           env.TF_VAR_trusted_role_arn    = params.TRUSTED_S3_ROLE_ARN.trim()
-    string(name: 'TRUSTED_S3_ROLE_ARN', defaultValue: '', description: 'Phase 1 only: single IAM principal ARN exempt from the bucket Deny. Empty = jenkins-ci user.')
           echo "=== BUILD START (UTC): ${env.APPLY_START_UTC} | build #${env.BUILD_NUMBER} | phase=${params.PHASE} ==="
         }
       }
