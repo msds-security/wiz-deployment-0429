@@ -34,7 +34,7 @@ pipeline {
       }
     }
     stage('Terraform Init') {
-      steps { dir("terraform/wiz-deployment-0429/${params.PHASE}") { sh 'terraform init -upgrade -reconfigure -backend-config=bucket=wiz-ciem-tfstate-562517367791 -backend-config=key=wiz-deployment-0429/${PHASE}/terraform.tfstate -backend-config=region=us-east-1' } }
+      steps { dir("terraform/wiz-deployment-0429/${params.PHASE}") { sh "terraform init -upgrade -reconfigure -backend-config=bucket=wiz-ciem-tfstate-562517367791 -backend-config=key=wiz-deployment-0429/${params.PHASE}/terraform.tfstate -backend-config=region=us-east-1" } }
     }
     stage('Terraform Plan') {
       steps { dir("terraform/wiz-deployment-0429/${params.PHASE}") { sh 'terraform plan -out=tfplan || true' } }
@@ -83,10 +83,33 @@ pipeline {
     success {
       script {
         def ts = sh(returnStdout: true, script: 'date -u +%Y-%m-%dT%H:%M:%SZ').trim()
-        echo "BUILD SUCCESS @ ${ts} UTC -- record this as t0 for Wiz detection latency."
+        def t0 = env.APPLY_END_UTC ?: env.APPLY_START_UTC ?: ts
+        def isApply = params.ACTION == 'apply'
+        echo """
+############################################################
+#                                                          #
+#   BUILD SUCCESS                                          #
+#                                                          #
+############################################################
+#   Build:        #${env.BUILD_NUMBER}
+#   Phase:        ${params.PHASE}
+#   Action:       ${params.ACTION}
+#   Apply start:  ${env.APPLY_START_UTC ?: 'n/a'}
+#   Apply end:    ${env.APPLY_END_UTC ?: 'n/a'}
+#   Build end:    ${ts}  (UTC)
+#   Wiz tag:      WizDeploymentRun=build-${env.BUILD_NUMBER}
+#   Build URL:    ${env.BUILD_URL}
+############################################################
+${isApply ? "#                                                          #\n#   >>> RECORD t0 = ${t0} UTC <<<\n#   >>> START WIZ DETECTION TIMER NOW             <<<\n#                                                          #\n############################################################" : "#   (${params.ACTION} run - no t0 to record)\n############################################################"}
+"""
       }
     }
-    failure { echo 'BUILD FAILED' }
+    failure {
+      script {
+        def ts = sh(returnStdout: true, script: 'date -u +%Y-%m-%dT%H:%M:%SZ').trim()
+        echo "BUILD FAILED @ ${ts} UTC"
+      }
+    }
     cleanup { dir('terraform/wiz-deployment-0429') { sh 'rm -f tfplan || true' } }
   }
 }
