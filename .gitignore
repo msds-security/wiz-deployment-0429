@@ -1,0 +1,37 @@
+# Local .terraform directories
+**/.terraform/*
+
+# Terraform lockfiles aren't ignored — they should be committed.
+# .terraform.lock.hcl
+
+# State files (we use S3 backend, but guard against accidental local state)
+*.tfstate
+*.tfstate.*
+*.tfstate.backup
+
+# Plan output
+*.tfplan
+tfplan
+
+# Crash logs
+crash.log
+crash.*.log
+
+# Variable files that may contain secrets
+*.auto.tfvars
+*.auto.tfvars.json
+secrets.tfvars
+terraform.tfvars
+terraform.tfvars.json
+
+# CLI config
+.terraformrc
+terraform.rc
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*~
