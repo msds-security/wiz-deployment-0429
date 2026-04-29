@@ -1,12 +1,14 @@
 # ============================================================================
-# WIZ DETECTION TEST - Phase 1 (Deny-except-role variant)
-# Bucket policy explicitly denies s3:* for ALL principals EXCEPT a single
-# trusted IAM principal (matched via aws:PrincipalArn). Public access blocks
-# are re-enabled. Validates Wiz CIEM mapping of effective access.
+# WIZ DETECTION TEST - Phase 1 (Deny-except-role variant, Option B)
+# Bucket policy explicitly denies s3:* for all principals EXCEPT a list of
+# trusted IAM principals: always jenkins-ci (so terraform can manage the
+# bucket), plus an optional additional role (the actual CIEM test subject).
 # ============================================================================
 
 locals {
-  bucket_name = "${var.project_name}-public-${var.account_id}"
+  bucket_name    = "${var.project_name}-public-${var.account_id}"
+  jenkins_ci_arn = "arn:aws:iam::${var.account_id}:user/jenkins-ci"
+
   common_tags = {
     Project          = var.project_name
     WizDeploymentRun = var.deployment_id
@@ -14,9 +16,12 @@ locals {
     Purpose          = "wiz-detection-test"
   }
 
-  # Default trusted principal: jenkins-ci user. Keeping terraform's own
-  # identity in the allow set prevents bucket-policy lockout on later applies.
-  effective_trusted_arn = var.trusted_role_arn != "" ? var.trusted_role_arn : "arn:aws:iam::${var.account_id}:user/jenkins-ci"
+  # Trust list: jenkins-ci is always included (lockout protection).
+  # If trusted_role_arn is supplied, it's appended.
+  trusted_principal_arns = distinct(compact(concat(
+    [local.jenkins_ci_arn],
+    [var.trusted_role_arn]
+  )))
 }
 
 resource "aws_s3_bucket" "public" {
@@ -45,7 +50,7 @@ resource "aws_s3_bucket_policy" "public" {
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{
-      Sid       = "DenyAllExceptTrustedRole"
+      Sid       = "DenyAllExceptTrustedPrincipals"
       Effect    = "Deny"
       Principal = "*"
       Action    = "s3:*"
@@ -55,7 +60,7 @@ resource "aws_s3_bucket_policy" "public" {
       ]
       Condition = {
         StringNotEquals = {
-          "aws:PrincipalArn" = local.effective_trusted_arn
+          "aws:PrincipalArn" = local.trusted_principal_arns
         }
       }
     }]

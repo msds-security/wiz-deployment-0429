@@ -19,7 +19,7 @@ variable "deployment_id" {
 }
 
 variable "trusted_role_arn" {
-  description = "Single IAM principal ARN allowed to access the bucket; everyone else is denied. Empty = default to jenkins-ci."
+  description = "Additional IAM role ARN to trust alongside jenkins-ci. jenkins-ci is always trusted for pipeline lifecycle; this is the role being tested for Wiz CIEM detection. Empty = only jenkins-ci."
   type        = string
   default     = ""
 }
