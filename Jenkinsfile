@@ -27,8 +27,8 @@ pipeline {
         script {
           env.APPLY_START_UTC = sh(returnStdout: true, script: 'date -u +%Y-%m-%dT%H:%M:%SZ').trim()
           // Phase-specific TF_VARs:
-          env.TF_VAR_external_account_id = params.EXTERNAL_ACCOUNT_ID
-          env.TF_VAR_trusted_role_arns   = params.TRUSTED_ROLE_ARNS_JSON
+          env.TF_VAR_external_account_id = params.EXTERNAL_ACCOUNT_ID.trim()
+          env.TF_VAR_trusted_role_arns   = params.TRUSTED_ROLE_ARNS_JSON.trim()
           echo "=== BUILD START (UTC): ${env.APPLY_START_UTC} | build #${env.BUILD_NUMBER} | phase=${params.PHASE} ==="
         }
       }
